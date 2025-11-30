@@ -1,15 +1,19 @@
-CC = m68k-atari-mint-gcc-14
-LD = m68k-atari-mint-gcc-14
+CC = m68k-atari-mint-gcc
+LD = m68k-atari-mint-gcc
 AS = vasmm68k_mot
 AR = m68k-atari-mint-ar
 
-SOURCES = achieve/ach_main.c achieve/ach_show.c achieve/ach_sign.c achieve/ach_unlk.c \
+CMINI_DIR = ../libcmini
+
+DEFS = -DdGODLIB_FADE # -DdGODLIB_CUTSCENE -DdGODLIB_PACKAGEMANGER -DdGODLIB_EXCEPTION_SCREEN -DdGODLIB_AUDIO_MIXER -DdGODLIB_CLOCK
+
+SOURCES = \
+	achieve/ach_main.c achieve/ach_show.c achieve/ach_sign.c achieve/ach_unlk.c \
 	assert/assert.c \
 	asset/asset.c asset/context.c asset/package.c asset/pkg_dir.c asset/pkg_lnk.c asset/relocate.c \
 	audio/amixer.c audio/audio.c audio/rel_spl.c audio/ssd.c \
 	base/base.c \
 	blitter/blitter.c \
-	chunky/chunky.c \
 	cli/cli.c \
 	clock/clock.c \
 	cookie/cookie.c \
@@ -21,18 +25,20 @@ SOURCES = achieve/ach_main.c achieve/ach_show.c achieve/ach_sign.c achieve/ach_u
 	encrypt/encrypt.c \
 	except/except.c \
 	fade/fade.c \
+	fade/fade_god.c \
 	fe/fed.c fe/fedparse.c fe/r_fed.c fe/rel_fed.c \
 	file/file.c \
 	font/font.c font/rel_bfb.c \
 	font8x8/font8x8.c font8x8/fontdata.c \
 	gemdos/gemdos.c \
-	graphic/graphic.c graphic/grf_4.c graphic/grf_16.c \
+	graphic/graphic.c \
 	gui/gui.c gui/guidata.c gui/guiedit.c gui/guifs.c gui/guiparse.c gui/r_gui.c \
 	hashlist/hashlist.c \
 	hashtree/hashtree.c \
 	ikbd/ikbd.c ikbd/ikbd_di.c ikbd/ikbd_sdl.c \
 	input/input.c \
 	kernel/kernel.c \
+	linea/linea.c \
 	linkfile/linkfile.c \
 	main/god_main.c \
 	memory/memory.c \
@@ -54,61 +60,58 @@ SOURCES = achieve/ach_main.c achieve/ach_show.c achieve/ach_sign.c achieve/ach_u
 	video/vid_d3d.c video/vid_img.c video/vid_sdl.c video/videl.c video/video.c \
 	xbios/xbios.c
 
-SOURCES_S = linea/linea_s.s \
-	music/snd_s.s \
-	music/pnknot_s.s \
-	debuglog/dbglog_s.s \
-	sprite/rsprit_s.s \
-	sprite/asprit_s.s \
-	packer/lz77b_s.s \
-	packer/rle_s.s \
-	packer/packer_s.s \
-	packer/lz77_s.s \
-	except/except_s.s \
-	wipe/wipe_s.s \
-	gemdos/gemdos_s.s \
-	pictypes/gfx_s.s \
-	chunky/chunky.s \
-	chunky/c2p_s.s \
-	chunky/chunky_s.s \
-	profiler/profiles.s \
-	file/file_s.s \
-	scrngrab/scrgrabs.s \
-	mfp/mfp_s.s \
-	system/system_s.s \
-	graphic/grf_b4_s.s \
-	graphic/grf_4_s.s \
-	graphic/grf_tc_s.s \
-	graphic/grf_16_s.s \
-	clock/clock_s.s \
-	program/prog_s.s \
-	bios/bios_s.s \
-	fade/fade_s.s \
-	audio/audio_s.s \
+SOURCES_S = \
 	audio/amixer_s.s \
+	audio/audio_s.s \
 	audio/ssd_s.s \
-	vbl/vbl_s.s \
-	maths/fvec_s.s \
-	maths/fmat_s.s \
-	xbios/xbios_s.s \
-	video/video_s.s \
-	memory/memory_s.s \
-	vector/vector_s.s \
+	bios/bios_s.s \
+	chunky/c2p_s.s \
+	chunky/chunky.s \
+	chunky/chunky_s.s \
+	clock/clock_s.s \
+	debuglog/dbglog_s.s \
+	except/except_s.s \
+	fade/fade_s.s \
+	file/file_s.s \
+	gemdos/gemdos_s.s \
+	graphic/grf_16_s.s \
+	graphic/grf_4_s.s \
+	graphic/grf_b4_s.s \
+	graphic/grf_tc_s.s \
 	ikbd/ikbd_s.s \
-
-
+	linea/linea_s.s \
+	memory/memory_s.s \
+	mfp/mfp_s.s \
+	music/pnknot_s.s \
+	music/snd_s.s \
+	packer/lz77_s.s \
+	packer/lz77b_s.s \
+	packer/packer_s.s \
+	packer/rle_s.s \
+	pictypes/gfx_s.s \
+	profiler/profiles.s \
+	program/prog_s.s \
+	scrngrab/scrgrabs.s \
+	sprite/asprit_s.s \
+	sprite/rsprit_s.s \
+	system/system_s.s \
+	vbl/vbl_s.s \
+	vector/vector_s.s \
+	video/video_s.s \
+	wipe/wipe_s.s \
+	xbios/xbios_s.s
 
 OBJECTS = $(SOURCES:.c=.o)
 OBJECTS_S = $(SOURCES_S:.s=.o)
 
-CFLAGS = -Wall -static -g -D dGODLIB_PLATFORM_ATARI -D dGODLIB_COMPILER_GCC  -I.. -I../cmini/include
+CFLAGS = -mshort -mfastcall -Os -Wall -static -g $(DEFS) -I.. # -I$(CMINI_DIR)/include
 
 LDFLAGS =
 
-OUT = godlib.a
+OUT = libgod.a
 
-$(OUT): $(OBJECTS)
-	$(AR) r $(OUT) $(OBJECTS)
+$(OUT): $(OBJECTS) $(OBJECTS_S)
+	$(AR) rcs $(OUT) $(OBJECTS) $(OBJECTS_S)
 
 $(OBJECTS): %.o: %.c
 	 $(CC) -c $(CFLAGS) $< -o $@

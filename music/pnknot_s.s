@@ -119,7 +119,7 @@ PinkNote_ProcessChannel:
 	move.b	oPinkNote_Control(a1),d0			;	read control byte
 	andi.b	#7,d0								;	keep it legal
 	lsl.w	#2,d0								;	as index into table
-	jmp		(2,pc,d0.w)							;	jump to relevant rout
+	jmp     PinkNote_ProcessFuncTable(pc,d0.w)							;	jump to relevant rout
 
 PinkNote_ProcessFuncTable:
 
@@ -351,6 +351,6 @@ _PinkNote_NotePlayChannelC:
 	BSS
 **************************************************************************************
 
-	ALIGN	4
+	cnop    0,4
 
 _gPinkNoteChannel:	ds.b	(oPinkNoteChannel_sizeof*3)

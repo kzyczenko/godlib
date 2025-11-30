@@ -24,7 +24,7 @@ Chunky_Init:
 	lea		gChunkyQuads2,a3
 	lea		gChunkyQuads0,a4
 
-.	moveq	#0,d3
+	moveq	#0,d3
 .l3:
 	move.l	(a1,d3.w),d4
 	moveq	#0,d2

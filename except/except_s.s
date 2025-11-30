@@ -401,7 +401,7 @@ _gExcept_HandlersTable:
 	BSS
 **************************************************************************************
 
-	ALIGN	4
+	cnop    0,4
 
 gExceptStackSpace:	ds.b	1024
 gExceptStack:		ds.b	16

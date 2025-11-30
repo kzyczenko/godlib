@@ -22,10 +22,10 @@
 ################################################################################### */
 
 #if defined(dGODLIB_PLATFORM_ATARI)
-extern sBasePage * _BasPag;
+extern sBasePage * __BasPage;
 #else
 sBasePage	gBasePageWin;
-sBasePage * _BasPag = &gBasePageWin;
+sBasePage * __BasPage = &gBasePageWin;
 #endif
 
 U8	gProgramArgvSpace[ 1024 ];
@@ -176,7 +176,7 @@ void		Program_Init( sBasePage * apPage )
 	U32		lBSSSize;
 	U8 *	lpData = (U8*)apPage;
 
-	sBasePage * lpParent = (sBasePage*)_BasPag;
+	sBasePage * lpParent = (sBasePage*)__BasPage;
 	sProgramHeader * lpHead = (sProgramHeader *)&lpData[ sizeof(sBasePage) - sizeof(sProgramHeader)];
 
 	Endian_ReadBigU32( &lpHead->mTextSize, lTextSize );
@@ -219,9 +219,9 @@ void				Program_Execute( sBasePage * apPage, const char * apCmdLine, const char 
 		{
 			const char * lpARGV="ARGV=";
 			U16 a = 0;
-			if( _BasPag && _BasPag->mpEnvironment )
+			if( __BasPage && __BasPage->mpEnvironment )
 			{
-				for( a = 0; _BasPag->mpEnvironment[ a ] && a < sizeof( gProgramArgvSpace ) - 1; gProgramArgvSpace[a++] = _BasPag->mpEnvironment[ a ] );
+				for( a = 0; __BasPage->mpEnvironment[ a ] && a < sizeof( gProgramArgvSpace ) - 1; gProgramArgvSpace[a++] = __BasPage->mpEnvironment[ a ] );
 			}
 			gProgramArgvSpace[ a++ ] = 0;
 			for( i=0; lpARGV[i] && a<sizeof(gProgramArgvSpace)-1; gProgramArgvSpace[ a++ ] = lpARGV[ i++] );
