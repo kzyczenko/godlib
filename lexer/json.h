@@ -33,6 +33,8 @@ enum eTypeJSON
 #  STRUCTS
 ################################################################################### */
 
+struct sReflectType;
+
 typedef struct sElementJSON
 {
 	sString	mToken;
@@ -88,7 +90,7 @@ void	JSON_Parse( sString * apSrc, sElementCollectionJSON  * apCollection );
 void	JSON_Destroy( sElementCollectionJSON * apCollection );
 
 void	JSON_ElementsTrim( const sElementCollectionJSON * apCollection );
-void	JSON_ElementsToStruct( const sElementCollectionJSON * apCollection,  const struct sReflectType * apType, U32 * apIndex, void * apDest );
+void 	JSON_ElementsToStruct( const sElementCollectionJSON * apCollection, const struct sReflectType * apType, U32 * apIndex, void * apDest );
 
 void	JSON_ElementWalker_Init( sElementCollectionWalkerJSON * apWalker, const sElementCollectionJSON * apCollection );
 void	JSON_ElementWalker_DeInit( sElementCollectionWalkerJSON * apWalker );

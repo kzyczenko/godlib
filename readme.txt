@@ -10,5 +10,3 @@ Additional Coding:
 	GGN
 	Sage
 	Scy/tSCc
-
-To Install, copy the GODLIB directory into your Pure C INCLUDE folder.

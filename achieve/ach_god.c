@@ -6,9 +6,9 @@
 
 #include	"ach_main.h"
 
-#include	<godlib\drive\drive.h>
-#include	<godlib\memory\memory.h>
-#include	<godlib\system\system.h>
+#include	<godlib/drive/drive.h>
+#include	<godlib/memory/memory.h>
+#include	<godlib/system/system.h>
 
 
 /* ###################################################################################

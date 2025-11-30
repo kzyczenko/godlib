@@ -11,6 +11,8 @@ enum eReflectType
 	eReflectType_String = ( 1 << 4 ),
 };
 
+struct sString;
+
 typedef struct sReflectEnumElement
 {
 	const char *	mpName;

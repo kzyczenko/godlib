@@ -116,7 +116,7 @@ U8	Lexer_GetNextToken( sLexerContext * apContext )
 		for( ;lpChars < lpEnd; lpChars++ )
 		{
 			char c = *lpChars;
-			if( '/'' == c || '"' == c )
+			if( '/' == c || '"' == c )
 				while( lpChars < lpEnd && c != *++lpChars );
 			else if( c<=' ')
 				break;

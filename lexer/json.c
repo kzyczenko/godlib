@@ -155,7 +155,7 @@ void	JSON_ElementsTrim( const sElementCollectionJSON * apCollection )
 * CREATION : 06.10.18 PNK
 *-----------------------------------------------------------------------------------*/
 
-void	JSON_ElementsToStruct( const sElementCollectionJSON * apCollection, const struct sReflectType * apType, U32 * apIndex, void * apDest )
+void JSON_ElementsToStruct( const sElementCollectionJSON * apCollection, const struct sReflectType * apType, U32 * apIndex, void * apDest )
 {
 	U16 depth = apCollection->mpElements[ *apIndex ].mDepth;
 	sString * lpPropName = 0;
