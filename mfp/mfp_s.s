@@ -1,0 +1,677 @@
+**************************************************************************************
+*	MFP_S.S
+*
+*	MFP routines
+*
+*	[c] 2001 Reservoir Gods
+**************************************************************************************
+
+**************************************************************************************
+;	EXPORTS / IMPORTS
+**************************************************************************************
+
+	XDEF	_Mfp_SaveRegisters
+	XDEF	_Mfp_RestoreRegisters
+
+	XDEF	_Mfp_GetTimerA
+	XDEF	_Mfp_GetTimerB
+	XDEF	_Mfp_GetTimerC
+	XDEF	_Mfp_GetTimerD
+
+	XDEF	_Mfp_InstallTimerA
+	XDEF	_Mfp_InstallTimerB
+	XDEF	_Mfp_InstallTimerC
+	XDEF	_Mfp_InstallTimerD
+
+	XDEF	_Mfp_InstallGPI7
+
+	XDEF	_Mfp_InstallStandardTimerC
+	XDEF	_Mfp_StandardTimerC
+
+	XDEF	_Mfp_StcOldJump
+	XDEF	_Mfp_StcNewJump
+	XDEF	_Mfp_StcTime
+
+	XDEF	_Mfp_HookIntoTimerC
+	XDEF	_Mfp_HookDisableTimerC
+	XDEF	_Mfp_HookEnableTimerC
+	XDEF	_Mfp_DisableSystemTimerC
+
+	XDEF	_gMfpStcTime
+	XDEF	_gMfpStcCounter
+
+
+**************************************************************************************
+;	STRUCTS
+**************************************************************************************
+
+    rsreset
+
+sMfpTimer_mFunc:    rs.l    1
+sMfpTimer_mFreq:    rs.w    1
+sMfpTimer_mMode:    rs.b    1
+sMfpTimer_mData:    rs.b    1
+sMfpTimer_mMask:    rs.b    1
+sMfpTimer_mEnable:  rs.b    1
+
+    rsreset
+
+sMfp_BlankReg00:    rs.b    1
+sMfp_PPDR:          rs.b    1
+sMfp_BlankReg02:    rs.b    1
+sMfp_AER:           rs.b    1
+sMfp_BlankReg04:    rs.b    1
+sMfp_DD:            rs.b    1
+sMfp_BlankReg06:    rs.b    1
+sMfp_IEA:           rs.b    1
+sMfp_BlankReg08:    rs.b    1
+sMfp_IEB:           rs.b    1
+sMfp_BlankReg0A:    rs.b    1
+sMfp_IPA:           rs.b    1
+sMfp_BlankReg0C:    rs.b    1
+sMfp_IPB:           rs.b    1
+sMfp_BlankReg0E:    rs.b    1
+sMfp_IISA:          rs.b    1
+sMfp_BlankReg10:    rs.b    1
+sMfp_IISB:          rs.b    1
+sMfp_BlankReg12:    rs.b    1
+sMfp_IMA:           rs.b    1
+sMfp_BlankReg14:    rs.b    1
+sMfp_IMB:           rs.b    1
+sMfp_BlankReg16:    rs.b    1
+sMfp_VR:            rs.b    1
+sMfp_BlankReg18:    rs.b    1
+sMfp_TAC:           rs.b    1
+sMfp_BlankReg1A:    rs.b    1
+sMfp_TBC:           rs.b    1
+sMfp_BlankReg1C:    rs.b    1
+sMfp_TCDC:          rs.b    1
+sMfp_BlankReg1E:    rs.b    1
+sMfp_TAD:           rs.b    1
+sMfp_BlankReg20:    rs.b    1
+sMfp_TBD:           rs.b    1
+sMfp_BlankReg22:    rs.b    1
+sMfp_TCD:           rs.b    1
+sMfp_BlankReg24:    rs.b    1
+sMfp_TDD:           rs.b    1
+sMfp_BlankReg26:    rs.b    1
+sMfp_SC:            rs.b    1
+sMfp_BlankReg28:    rs.b    1
+sMfp_UC:            rs.b    1
+sMfp_BlankReg2A:    rs.b    1
+sMfp_RS:            rs.b    1
+sMfp_BlankReg2C:    rs.b    1
+sMfp_TS:            rs.b    1
+sMfp_BlankReg2E:    rs.b    1
+sMfp_UD:            rs.b    1
+
+**************************************************************************************
+	TEXT
+**************************************************************************************
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : Mfp_Init( U32 * apSaveSpace )
+* ACTION   : saves MFP registers
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_SaveRegisters:
+	movem.l	d0-a6,-(a7)			;	save registers
+	move.w	sr,-(a7)			;	save status register
+
+	ori.w	#$0700,sr			;	disable interrupts
+
+	movea.w	#$100,a1			;	start of MFP vectors
+	moveq	#15,d0				;	16 vectors to save
+.smfp_loop:
+	move.l	(a1)+,(a0)+			;	save mfp registers
+	dbra	d0,.smfp_loop		;	loop for all MFP vectors
+
+	move.b	$FFFFFA03.w,(a0)+	;	save Active Edge Register
+	move.b	$FFFFFA05.w,(a0)+	;	save Data Directionr Register
+	move.b	$FFFFFA17.w,(a0)+	;	save Vector Register
+
+	move.b	$FFFFFA01.w,(a0)+	;	save Parallel Port Data
+	move.b	$FFFFFA1F.w,(a0)+	;	save Timer A Data
+	move.b	$FFFFFA21.w,(a0)+	;	save Timer B Data
+;	move.b	$FFFFFA23.w,(a0)+	;	save Timer C Data
+	move.b	$FFFFFA25.w,(a0)+	;	save Timer D Data
+	move.b	$FFFFFA27.w,(a0)+	;	save Sync Character
+	move.b	$FFFFFA2F.w,(a0)+	;	save USART Data
+
+	move.b	$FFFFFA29.w,(a0)+	;	save USART Control
+	move.b	$FFFFFA2B.w,(a0)+	;	save Receiver Status
+	move.b	$FFFFFA2D.w,(a0)+	;	save Transmitter Status
+
+	move.b	$FFFFFA13.w,(a0)+	;	save Interrupt Mask A
+	move.b	$FFFFFA15.w,(a0)+	;	save Interrupt Mask B
+	move.b	$FFFFFA0F.w,(a0)+	;	save In Service A
+	move.b	$FFFFFA11.w,(a0)+	;	save In Service B
+	move.b	$FFFFFA0B.w,(a0)+	;	save Pending A
+	move.b	$FFFFFA0D.w,(a0)+	;	save Pending B
+	move.b	$FFFFFA07.w,(a0)+	;	save Enable A
+	move.b	$FFFFFA09.w,(a0)+	;	save Enable B
+
+	move.b	$FFFFFA19.w,(a0)+	;	save Timer A Control
+	move.b	$FFFFFA1B.w,(a0)+	;	save Timer B Control
+	move.b	$FFFFFA1D.w,(a0)+	;	save Timer C+D Control
+
+	move.w	(a7)+,sr			;	restore status register
+	movem.l	(a7)+,d0-a6			;	restore registers
+
+	rts
+
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : Mfp_DeInit( U32 * apSaveSpace )
+* ACTION   : restores MFP registers
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_RestoreRegisters:
+
+	movem.l	d0-a6,-(a7)			;	save registers
+	move.w	sr,-(a7)			;	save status register
+
+	ori.w	#$0700,sr			;	disable interrupts
+
+	movea.w	#$100,a1			;	start of MFP vectors
+	moveq	#15,d0				;	16 vectors to restore
+.rmfp_loop:
+	move.l	(a0)+,(a1)+			;	restore mfp registers
+	dbra	d0,.rmfp_loop		;	loop for all MFP vectors
+
+	clr.b	$FFFFFA19.w			;	stop Timer A
+	clr.b	$FFFFFA1B.w			;	stop Timer B
+	clr.b	$FFFFFA1D.w			;	stop Timer C+D
+
+	move.b	(a0)+,$FFFFFA03.w	;	restore Active Edge Register
+	move.b	(a0)+,$FFFFFA05.w	;	restore Data Directionr Register
+	move.b	(a0)+,$FFFFFA17.w	;	restore Vector Register
+
+	move.b	(a0)+,$FFFFFA01.w	;	restore Parallel Port Data
+	move.b	(a0)+,$FFFFFA1F.w	;	restore Timer A Data
+	move.b	(a0)+,$FFFFFA21.w	;	restore Timer B Data
+;	move.b	(a0)+,$FFFFFA23.w	;	restore Timer C Data
+	move.b	(a0)+,$FFFFFA25.w	;	restore Timer D Data
+	move.b	(a0)+,$FFFFFA27.w	;	restore Sync Character
+	move.b	(a0)+,$FFFFFA2F.w	;	restore USART Data
+
+	move.b	(a0)+,$FFFFFA29.w	;	restore USART Control
+	move.b	(a0)+,$FFFFFA2B.w	;	restore Receiver Status
+	move.b	(a0)+,$FFFFFA2D.w	;	restore Transmitter Status
+
+	move.b	(a0)+,$FFFFFA13.w	;	restore Interrupt Mask A
+	move.b	(a0)+,$FFFFFA15.w	;	restore Interrupt Mask B
+	move.b	(a0)+,$FFFFFA0F.w	;	restore In Service A
+	move.b	(a0)+,$FFFFFA11.w	;	restore In Service B
+	move.b	(a0)+,$FFFFFA0B.w	;	restore Pending A
+	move.b	(a0)+,$FFFFFA0D.w	;	restore Pending B
+	move.b	(a0)+,$FFFFFA07.w	;	restore Enable A
+	move.b	(a0)+,$FFFFFA09.w	;	restore Enable B
+
+	move.b	(a0)+,$FFFFFA19.w	;	restore Timer A Control
+	move.b	(a0)+,$FFFFFA1B.w	;	restore Timer B Control
+	move.b	(a0)+,$FFFFFA1D.w	;	restore Timer C+D Control
+
+	move.w	(a7)+,sr			;	restore Status Register
+	movem.l	(a7)+,d0-a6			;	restore registers
+
+	rts
+
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : _Mfp_InstallTimerA( sMfpTimer * apTimer )
+* ACTION   : installs a timer a routine
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_GetTimerA:
+
+	movem.l	d0-a6,-(a7)							;	save registers
+	move.w	sr,-(a7)							;	save status register
+
+	ori.w	#$0700,sr							;	disable interrupts
+
+	movea.w	#$FA00,a1							;	base address of MFP 1
+
+	move.l	$134.w,sMfpTimer_mFunc(a0)			;	Timer Rout
+	move.b	sMfp_TAC(a1),sMfpTimer_mMode(a0)	;	Get control
+	move.b	sMfp_TAD(a1),sMfpTimer_mData(a0)	;	Get data
+	move.b	sMfp_IMA(a1),d0						;	Read MaskA
+	lsr.b	#5,d0								;	Get TimerA bit
+	and.b	#1,d0								;	Clear other bits
+	move.b	d0,sMfpTimer_mMask(a0)				;	Store mask
+	move.b	sMfp_IEA(a1),d0						;	Read EnableA
+	lsr.b	#5,d0								;	Get TimerA bit
+	and.b	#1,d0								;	Clear other bits
+	move.b	d0,sMfpTimer_mEnable(a0)			;	Store mask
+
+	move.w	(a7)+,sr							;	restore Status Register
+	movem.l	(a7)+,d0-a6							;	restore registers
+
+	rts
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : _Mfp_InstallTimerA( sMfpTimer * apTimer )
+* ACTION   : installs a timer a routine
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_InstallTimerA:
+
+	movem.l	d0-a6,-(a7)							;	save registers
+	move.w	sr,-(a7)							;	save status register
+
+	ori.w	#$0700,sr							;	disable interrupts
+
+	movea.w	#$FA00,a1							;	base address of MFP 1
+	clr.b	sMfp_TAC(a1)						;	stop Timer A
+	move.l	sMfpTimer_mFunc(a0),$134.w			;	Timer A routine
+	move.b	sMfpTimer_mData(a0),sMfp_TAD(a1)	;	Timer A data
+
+	move.b	sMfpTimer_mMask(a0),d0				;	Mask value
+	and.b	#1,d0								;	get rid of unwanted bits
+	lsl.b	#5,d0								;	shift into place
+	and.b	#$DF,sMfp_IMA(a1)					;	Timer A interrupt mask (11011111)
+	or.b	d0,sMfp_IMA(a1)						;	set mask
+
+	move.b	sMfpTimer_mEnable(a0),d0			;	Enable value
+	and.b	#1,d0								;	get rid of unwanted bits
+	lsl.b	#5,d0								;	shift into place
+	and.b	#$DF,sMfp_IEA(a1)					;	Timer A enable (%11011111)
+	or.b	d0,sMfp_IEA(a1)						;	set enable
+
+	move.b	sMfpTimer_mMode(a0),sMfp_TAC(a1)	;	Timer A control
+
+	move.w	(a7)+,sr							;	restore Status Register
+	movem.l	(a7)+,d0-a6							;	restore registers
+
+	rts
+
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : _Mfp_GetTimerB( sMfpTimer * apTimer )
+* ACTION   : gets current timer b routine
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_GetTimerB:
+
+	movem.l	d0-a6,-(a7)							;	save registers
+	move.w	sr,-(a7)							;	save status register
+
+	ori.w	#$0700,sr							;	disable interrupts
+
+	movea.w	#$FA00,a1							;	base address of MFP 1
+
+	move.l	$120.w,sMfpTimer_mFunc(a0)			;	Timer Rout
+	move.b	sMfp_TBC(a1),sMfpTimer_mMode(a0)	;	Get control
+	move.b	sMfp_TBD(a1),sMfpTimer_mData(a0)	;	Get data
+	move.b	sMfp_IMA(a1),d0						;	Read MaskA
+	and.b	#1,d0								;	Clear other bits
+	move.b	d0,sMfpTimer_mMask(a0)				;	Store mask
+	move.b	sMfp_IEA(a1),d0						;	Read EnableA
+	and.b	#1,d0								;	Clear other bits
+	move.b	d0,sMfpTimer_mEnable(a0)			;	Store mask
+
+	move.w	(a7)+,sr							;	restore Status Register
+	movem.l	(a7)+,d0-a6							;	restore registers
+
+	rts
+
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : _Mfp_InstallTimerB( sMfpTimer * apTimer )
+* ACTION   : installs a timer a routine
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_InstallTimerB:
+
+	movem.l	d0-a6,-(a7)							;	save registers
+	move.w	sr,-(a7)							;	save status register
+
+	ori.w	#$0700,sr							;	disable interrupts
+
+	movea.w	#$FA00,a1							;	base address of MFP 1
+	clr.b	sMfp_TBC(a1)						;	stop Timer B
+	move.l	sMfpTimer_mFunc(a0),$120.w			;	Timer B routine
+	move.b	sMfpTimer_mData(a0),sMfp_TBD(a1)	;	Timer B data
+
+	move.b	sMfpTimer_mMask(a0),d0				;	Mask value
+	and.b	#1,d0								;	get rid of unwanted bits
+	and.b	#$FE,sMfp_IMA(a1)					;	Timer B interrupt mask (%11111110)
+	or.b	d0,sMfp_IMA(a1)						;	set mask
+
+	move.b	sMfpTimer_mEnable(a0),d0			;	Enable value
+	and.b	#1,d0								;	get rid of unwanted bits
+	and.b	#$FE,sMfp_IEA(a1)					;	Timer B enable (%11111110)
+	or.b	d0,sMfp_IEA(a1)						;	set enable
+
+	move.b	sMfpTimer_mMode(a0),sMfp_TBC(a1)	;	Timer B control
+
+	move.w	(a7)+,sr							;	restore Status Register
+	movem.l	(a7)+,d0-a6							;	restore registers
+
+	rts
+
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : _Mfp_GetTimerC( sMfpTimer * apTimer )
+* ACTION   : gets current timer c routine
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_GetTimerC:
+
+	movem.l	d0-a6,-(a7)							;	save registers
+	move.w	sr,-(a7)							;	save status register
+
+	ori.w	#$0700,sr							;	disable interrupts
+
+	movea.w	#$FA00,a1							;	base address of MFP 1
+
+	move.l	$114.w,sMfpTimer_mFunc(a0)			;	Timer Rout
+	move.b	sMfp_TCDC(a1),d0					;	Get TimerC control
+	lsr.b	#4,d0								;	Get TimerC bits
+	and.b	#$f,d0								;	Mask off unwanted bits
+	move.b	d0,sMfpTimer_mMode(a0)				;	Get control
+	move.b	sMfp_TCD(a1),sMfpTimer_mData(a0)	;	Get data
+	move.b	sMfp_IMB(a1),d0						;	Read MaskB
+	lsr.w	#5,d0
+	and.b	#1,d0								;	Clear other bits
+	move.b	d0,sMfpTimer_mMask(a0)				;	Store mask
+	move.b	sMfp_IEB(a1),d0						;	Read EnableB
+	lsr.w	#5,d0
+	and.b	#1,d0								;	Clear other bits
+	move.b	d0,sMfpTimer_mEnable(a0)			;	Store mask
+
+	move.w	(a7)+,sr							;	restore Status Register
+	movem.l	(a7)+,d0-a6							;	restore registers
+
+	rts
+
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : _Mfp_InstallTimerC( sMfpTimer * apTimer )
+* ACTION   : installs a timer c routine
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_InstallTimerC:
+
+	movem.l	d0-a6,-(a7)							;	save registers
+	move.w	sr,-(a7)							;	save status register
+
+	ori.w	#$0700,sr							;	disable interrupts
+
+	movea.w	#$FA00,a1							;	base address of MFP 1
+	and.b	#$0F,sMfp_TCDC(a1)					;	stop Timer C
+	move.l	sMfpTimer_mFunc(a0),$114.w			;	Timer C routine
+	move.b	sMfpTimer_mData(a0),sMfp_TCD(a1)	;	Timer C data
+
+	move.b	sMfpTimer_mMask(a0),d0				;	Mask value
+	and.b	#1,d0								;	get rid of unwanted bits
+	lsl.b	#5,d0								;	shift into place
+	and.b	#$DF,sMfp_IMB(a1)					;	Timer C interrupt mask (%11011111)
+	or.b	d0,sMfp_IMB(a1)						;	set mask
+
+	move.b	sMfpTimer_mEnable(a0),d0			;	Enable value
+	and.b	#1,d0								;	get rid of unwanted bits
+	lsl.b	#5,d0								;	shift into place
+	and.b	#$DF,sMfp_IEB(a1)					;	Timer C enable (%11011111)
+	or.b	d0,sMfp_IEB(a1)						;	set enable
+
+	move.b	sMfpTimer_mMode(a0),d0				;	mode
+	lsl.b	#4,d0								;	into top 4 bits
+	or.b	d0,sMfp_TCDC(a1)					;	Timer C control
+
+	move.w	(a7)+,sr							;	restore Status Register
+	movem.l	(a7)+,d0-a6							;	restore registers
+
+	rts
+
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : _Mfp_GetTimerC( sMfpTimer * apTimer )
+* ACTION   : gets current timer c routine
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_GetTimerD:
+
+	movem.l	d0-a6,-(a7)							;	save registers
+	move.w	sr,-(a7)							;	save status register
+
+	ori.w	#$0700,sr							;	disable interrupts
+
+	movea.w	#$FA00,a1							;	base address of MFP 1
+
+	move.l	$110.w,sMfpTimer_mFunc(a0)			;	Timer Rout
+	move.b	sMfp_TCDC(a1),d0					;	Get TimerC control
+	and.b	#$f,d0								;	Mask off unwanted bits
+	move.b	d0,sMfpTimer_mMode(a0)				;	Get control
+	move.b	sMfp_TCD(a1),sMfpTimer_mData(a0)	;	Get data
+	move.b	sMfp_IMB(a1),d0						;	Read MaskB
+	lsr.w	#4,d0
+	and.b	#1,d0								;	Clear other bits
+	move.b	d0,sMfpTimer_mMask(a0)				;	Store mask
+	move.b	sMfp_IEB(a1),d0						;	Read EnableB
+	lsr.w	#4,d0
+	and.b	#1,d0								;	Clear other bits
+	move.b	d0,sMfpTimer_mEnable(a0)			;	Store mask
+
+	move.w	(a7)+,sr							;	restore Status Register
+	movem.l	(a7)+,d0-a6							;	restore registers
+
+	rts
+
+
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : _Mfp_InstallTimerD( sMfpTimer * apTimer )
+* ACTION   : installs a timer d routine
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_InstallTimerD:
+
+	movem.l	d0-a6,-(a7)							;	save registers
+	move.w	sr,-(a7)							;	save status register
+
+	ori.w	#$0700,sr							;	disable interrupts
+
+	movea.w	#$FA00,a1							;	base address of MFP 1
+	and.b	#$F0,sMfp_TCDC(a1)					;	stop Timer D
+	move.l	sMfpTimer_mFunc(a0),$110.w			;	Timer D routine
+	move.b	sMfpTimer_mData(a0),sMfp_TDD(a1)	;	Timer D data
+
+
+	move.b	sMfpTimer_mMask(a0),d0				;	Mask value
+	and.b	#1,d0								;	get rid of unwanted bits
+	lsl.b	#4,d0								;	shift into place
+	and.b	#$EF,sMfp_IMB(a1)					;	Timer C interrupt mask (%11101111)
+	or.b	d0,sMfp_IMB(a1)						;	set mask
+
+	move.b	sMfpTimer_mEnable(a0),d0			;	Enable value
+	and.b	#1,d0								;	get rid of unwanted bits
+	lsl.b	#4,d0								;	shift into place
+	and.b	#$EF,sMfp_IEB(a1)					;	Timer C enable (%11101111)
+	or.b	d0,sMfp_IEB(a1)						;	set enable
+
+	move.b	sMfpTimer_mMode(a0),d0				;	mode
+	or.b	d0,sMfp_TCDC(a1)					;	Timer C control
+
+	move.w	(a7)+,sr							;	restore Status Register
+	movem.l	(a7)+,d0-a6							;	restore registers
+
+	rts
+
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : _Mfp_InstallStandardTimerC( void )
+* ACTION   : intasll standard timer c routine, with hookable call
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_InstallStandardTimerC:
+
+	move.w	sr,-(a7)						;	save status register
+
+	ori.w	#$0700,sr						;	disable	interrupts
+
+	move.l	$114.w,_Mfp_StcOldJump+2			;	old timer c rout
+	clr.b	gMfpStcNewEnableFlag			;	disable hookable timer c int
+	move.l	#_Mfp_StandardTimerC,$114.w		;	install my timer c routine
+
+	move.w	(a7)+,sr						;	restore Status Register
+
+	rts
+
+
+*------------------------------------------------------------------------------------*
+* FUNCTION : _Mfp_HookIntoTimerC( sMfpTimer * apTimer )
+* ACTION   : hooks a routine into timer c vector
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_HookIntoTimerC:
+
+	move.w	sr,-(a7)								;	save status register
+
+	ori.w	#$0700,sr								;	disable	interrupts
+
+	clr.b	gMfpStcNewEnableFlag					;	disable hookable timer c int
+	move.l	sMfpTimer_mFunc(a0),_Mfp_StcNewJump+2	;	install new routine
+	move.w	sMfpTimer_mFreq(a0),gMfpStcNewHz		;	frequency to interrupt
+	move.w	sMfpTimer_mFreq(a0),gMfpStcNewCounter	;	init counter
+	clr.b	gMfpStcNewLockFlag						;	ensure no deadlock
+	st.b	gMfpStcNewEnableFlag					;	enble hookable timer c int
+
+	move.w	(a7)+,sr								;	restore Status Register
+
+	rts
+
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : _Mfp_StandardTimerC( void )
+* ACTION   : standard timer c routine, with hookable call
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_StandardTimerC:
+
+	move.l	d0,-(a7)						;	save	d0
+	move.w	sr,-(a7)
+	move.w	#$2300,sr
+
+	move.l	_gMfpStcTime,d0					;	old clock value
+	addq.b	#1,d0							;	inc microseconds (200hz)
+	cmp.b	#199,d0							;	next second reached?
+	bls.s	.tc_storeclock					;	no, store clock value
+.tc_sectick:
+	clr.b	d0								;	reset microseconds counter
+	add.w	#256,d0							;	inc second counter
+	cmp.w	#(59*256),d0					;	60 second reached?
+	bls.s	.tc_storeclock					;	no, store clock value
+.tc_mintick:
+	clr.w	d0								;	clear seconds
+	swap	d0								;	get hours:minutes
+	addq.b	#1,d0							;	inc minutes
+	cmp.b	#59,d0							;	60 minutes reached?
+	bls.s	.tc_swapstore					;	no, swap & store clcok
+.tc_hourtick:
+	clr.b	d0								;	clear minutes
+	add.w	#256,d0							;	inc hours
+.tc_swapstore:
+	swap	d0								;	hours:minutes into top 16 bits
+.tc_storeclock:
+	move.l	d0,_gMfpStcTime					;	store clock
+
+	addq.l	#1,_gMfpStcCounter				;	inc 200hz counter;
+
+	tst.b	gMfpStcNewEnableFlag			;	has new timer c int been installed?
+	beq.s	Mfp_StcExit						;	no new int
+
+	move.w	gMfpStcNewHz,d0					;	frequency of new timer c call
+	sub.w	d0,gMfpStcNewCounter			;	dec new counter
+	bgt.s	Mfp_StcExit						;	don't call interrupt yet
+
+	add.w	#200,gMfpStcNewCounter			;	time until next int
+
+	tas		gMfpStcNewLockFlag				;	test & set lock flag
+	bne.s	Mfp_StcExit						;	already executing timer c int
+
+_Mfp_StcNewJump:
+	jsr		$12345678						;	call new timer c rout
+
+	clr.b	gMfpStcNewLockFlag				;	new timer c rout finished
+
+Mfp_StcExit:
+	move.w	(a7)+,sr
+	move.l	(a7)+,d0						;	restore timer c
+
+_Mfp_StcOldJump:
+	jmp		$1234568						;	jump to os
+
+
+_Mfp_HookDisableTimerC:
+	clr.b	gMfpStcNewEnableFlag
+	rts
+
+
+_Mfp_HookEnableTimerC:
+	st.b	gMfpStcNewEnableFlag
+	rts
+
+Mfp_ReturnTimerC:
+	bclr.b	#5,$FFFFFA11.w
+	rte
+
+_Mfp_DisableSystemTimerC:
+	move.l	#Mfp_ReturnTimerC,_Mfp_StcOldJump+2
+	rts
+
+
+*------------------------------------------------------------------------------------*
+* FUNTION  : _Mfp_InstallGPI7( void (*apHandler)(void), U8 aPinLowHighFlag )
+* ACTION   : installs a GPI7 routine
+* CREATION : 24.01.01 PNK
+*------------------------------------------------------------------------------------*
+
+_Mfp_InstallGPI7:
+
+	movem.l	d0-a6,-(a7)						;	save registers
+	move.w	sr,-(a7)						;	save status register
+
+	ori.w	#$0700,sr						;	disable interrupts
+
+	movea.w	#$FA00,a1						;	base address of MFP 1
+	move.l	a0,$13C.w						;	Timer A routine
+	andi.b	#$7F,sMfp_AER(a1)				;	clear GPI7 pin transition bit
+	lsl.b	#7,d0							;	PinLowHigh flag
+	or.b	d0,sMfp_AER(a1)					;	set GPI7 pin transition type
+	or.b	#$80,sMfp_IMA(a1)				;	Timer A interrupt mask (%10000000)
+	or.b	#$80,sMfp_IEA(a1)				;	Timer A enable (%10000000)
+
+	move.w	(a7)+,sr						;	restore Status Register
+	movem.l	(a7)+,d0-a6						;	restore registers
+
+	rts
+
+
+**************************************************************************************
+	DATA
+**************************************************************************************
+
+	cnop	1,8
+
+_gMfpStcTime:			dc.l	0
+_gMfpStcCounter:			dc.l	0
+gMfpStcNewCounter:		dc.w	0
+gMfpStcNewHz:			dc.w	0
+gMfpStcNewEnableFlag:	dc.b	0
+gMfpStcNewLockFlag:		dc.b	0
+
+	cnop 1,8
