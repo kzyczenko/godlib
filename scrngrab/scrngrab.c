@@ -144,7 +144,7 @@ void	ScreenGrab_SetKeyIndex( const U8 aIndex )
 
 void	ScreenGrab_Update( void )
 {
-	char			lFileName[ 264 ];
+	char			lFileName[ 268 ];
 	sDegasHeader	lHeader;
 	sFileHandle		lHandle;
 

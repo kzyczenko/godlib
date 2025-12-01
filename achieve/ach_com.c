@@ -326,7 +326,7 @@ void	Achieve_Compiler_DeCompile( const char * apSrcFileName, const char * apDstF
 			Achieve_Compiler_Output_BlockStart( "[TASKS]" );
 			for( i=0; i<Achieve_Tasks_GetCount(); i++ )
 			{
-				sprintf( lString, "\"%s\" %d", Achieve_Tasks_GetpTitle( i ), Achieve_Task_GetPoints(i) );
+				sprintf( lString, "\"%s\" %ld", Achieve_Tasks_GetpTitle( i ), Achieve_Task_GetPoints(i) );
 				Achieve_Compiler_Output_String( lString );
 			}
 			Achieve_Compiler_Output_BlockEnd();
@@ -499,7 +499,7 @@ void	Achieve_Compiler_Output_String( const char * apString )
 void	Achieve_Compiler_Pass( const char * apData, const U32 aSize, fAchieveCompilerOnLine afOnLine )
 {
 	sThread					lThread;
-	sThread					lThread2;
+	sThread					lThread2 = {0};
 	sAchieveCompilerLine	lLine;
 	U32						lOffset = 0;
 

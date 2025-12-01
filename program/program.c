@@ -221,7 +221,12 @@ void				Program_Execute( sBasePage * apPage, const char * apCmdLine, const char 
 			U16 a = 0;
 			if( __BasPage && __BasPage->mpEnvironment )
 			{
-				for( a = 0; __BasPage->mpEnvironment[ a ] && a < sizeof( gProgramArgvSpace ) - 1; gProgramArgvSpace[a++] = __BasPage->mpEnvironment[ a ] );
+				for( a = 0;
+					__BasPage->mpEnvironment[a] && a < sizeof(gProgramArgvSpace) - 1;
+					a++ )
+				{
+					gProgramArgvSpace[a] = __BasPage->mpEnvironment[a];
+				}
 			}
 			gProgramArgvSpace[ a++ ] = 0;
 			for( i=0; lpARGV[i] && a<sizeof(gProgramArgvSpace)-1; gProgramArgvSpace[ a++ ] = lpARGV[ i++] );

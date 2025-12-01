@@ -1852,7 +1852,7 @@ void Tokeniser_ShowInfo( U8 * apData, sTokeniserInfo * apInfo )
 	U8 *						lpItems;
 	U8 *						lpArrayItem;
 	char						lPair[ 512 ];
-	char						lString[ 512 ];
+	char						lString[ 506 ];
 
 	DebugLog_Printf0( "Tokeniser_ShowInfo()" );
 
