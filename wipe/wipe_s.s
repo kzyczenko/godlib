@@ -285,9 +285,11 @@ Wipe_Out_Render:
 	swap	d2
 	move.w	(a1)+,d2
 
+	not.l   d2
+
 	REPT	40
 
-	or.l	d2,(a0)+
+	and.l	d2,(a0)+
 
 	ENDR
 
