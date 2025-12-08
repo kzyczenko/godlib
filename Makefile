@@ -127,5 +127,5 @@ $(OBJECTS_S): %.o: %.s
 	 $(AS) -devpac -Faout $< -o $@
 
 clean:
-	rm -rf $(OBJECTS) $(OUT)
+	rm -rf $(OBJECTS_S) $(OBJECTS) $(OUT)
 
