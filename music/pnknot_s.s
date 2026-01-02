@@ -352,5 +352,3 @@ _PinkNote_NotePlayChannelC:
 **************************************************************************************
 
 	cnop    0,4
-
-_gPinkNoteChannel:	ds.b	(oPinkNoteChannel_sizeof*3)

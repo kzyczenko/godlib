@@ -39,7 +39,7 @@
 #include	"am_cos.h"
 #include	"ampanlaw.h"
 
-#include	<godlib/audio/AUDIO.H>
+#include	<godlib/audio/audio.h>
 #include	<godlib/file/file.h>
 #include	<godlib/memory/memory.h>
 #include	<godlib/mfp/mfp.h>
